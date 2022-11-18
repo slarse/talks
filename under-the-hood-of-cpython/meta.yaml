@@ -1,0 +1,36 @@
+---
+title: 'Under the Hood of CPython'
+author:
+- Simon Larsén
+institute: HiQ
+date: \today
+numbersections: true
+section-titles: false
+csl: ieee.csl
+colorlinks: true
+link-citations: true
+citecolor: black
+linkcolor: black
+urlcolor: black
+toccolor: black
+bibliography: papers.bib
+
+theme: metropolis
+themeoptions: [numbering=none]
+aspectratio: 169
+
+header-includes:
+- \usepackage{graphicx}
+- \usepackage{float}
+- \usepackage{caption}
+- \usepackage{subcaption}
+- \usepackage{amsfonts}
+- \usepackage{booktabs}
+- \usepackage{float}
+- \usepackage{multicol}
+- \usepackage{listings}
+- \usepackage{tikz}
+- \usetikzlibrary{positioning}
+- \usetikzlibrary{shapes.geometric}
+- \usepackage[utf8]{inputenc}
+---
