@@ -214,12 +214,13 @@ the previous frame is entered and the returning function's frame is destroyed
 
 ## What is a stack?
 
-A last-in-first-out (LIFO) data structure. We need to know about three
+A last-in-first-out (LIFO) data structure. We need to know about four
 operations:
 
 * Push: Put something on top of the stack.
 * Pop: Remove and return the topmost value from the stack.
 * Peek/top: Look at the topmost value on the stack without removing it.
+* Set: Overwrite the top of the stack.
 
 \tikzset{
     square/.style={rectangle, draw=black, align=center, minimum width=5, thick},
@@ -247,7 +248,11 @@ operations:
     \node[square, below=0cm of stackbottom4] (stacktop4) {5};
     \node[label, above=.2cm of stackbottom4] (labelstack4) {After top};
 
-    \node[square, dotted, below right=1.5cm and 1cm of stacktop1] (push) {2};
+    \node[square, right=2cm of stackbottom4] (stackbottom5) {3};
+    \node[square, below=0cm of stackbottom5] (stacktop5) {7};
+    \node[label, above=.2cm of stackbottom5] (labelstack5) {After set};
+
+    \node[square, dotted, below right=1cm and 1cm of stacktop1] (push) {2};
     \node[label, below=.2cm of push] (pushlabel) {push};
 
     \node[square, right=2cm of push] (pop) {2};
@@ -256,10 +261,14 @@ operations:
     \node[square, right=2cm of pop] (top) {5};
     \node[label, below=.2cm of top] (poplabel) {top};
 
+    \node[square, dotted, right=2cm of top] (set) {7};
+    \node[label, below=.2cm of set] (setlabel) {set};
+
     \path [thick, black, dashed, ->]
     (push.east) edge [bend right] (stacktop2.south)
     (stackpopped.south) edge [bend left] (pop.east)
     (stacktop4.south) edge [bend left] (top.east)
+    (set.east) edge [bend right] (stacktop5.south)
     ;
 \end{tikzpicture}
 
@@ -464,6 +473,95 @@ also_obj = my_obj   # ob_refcnt = 2
 print(my_obj)       # ob_refcnt = 3, reference is stored in print's frame (locals)
                     # ob_refcnt = 2 after print returns, its frame being destroyed
 ```
+
+## Cyclical references from exception handling
+
+\centering If you catch an exception, you get a cyclical reference!
+
+\tikzset{
+    square/.style={rectangle, draw=black, align=center, minimum width=5, thick},
+    value/.style={circle, draw=black, align=center, thick, minimum width=20},
+    point/.style={circle, fill=black, thin, minimum width=.05cm}
+}
+
+\centering
+\begin{tikzpicture}
+    \node[square,label={main frame}, xshift=-7cm, minimum width=80, minimum height=125] (frameMain) {};
+
+    \node[square, label={Locals}, yshift=1cm, xshift=-7cm] (localsMain) {\texttt{*exc}};
+
+    \node[square, below=.6cm of localsMain] (backMain) {f\_back};
+
+    \node[square, label={Code}, below=.6cm of backMain] (bytecodeMain) {
+        \tiny \texttt{def main():}\\  ...
+    };
+
+    \node[square, label={create\_numbers frame}, minimum width=80, minimum height=125] (frameCreateNumbers) {};
+
+    \node[square, label={Locals}, yshift=1cm] (localsCreateNumbers) {\texttt{*numbers}};
+
+    \node[square, below=.6cm of localsCreateNumbers] (backCreateNumbers) {f\_back};
+
+    \node[square, label={Code}, below=.6cm of backCreateNumbers] (bytecodeCreateNumbers) {
+        \tiny \texttt{def create\_numbers():}\\  ...
+    };
+
+    \node[value, right=2cm of localsMain] (exception) {\texttt{exc}};
+    \node[value, right=1cm of localsCreateNumbers] (numbers) {\texttt{numbers}};
+
+    \path [thick, black, ->]
+    (localsMain.east) edge (exception.west)
+    (exception.east) edge (frameCreateNumbers.west)
+    (backCreateNumbers.west) edge (frameMain.east)
+    (localsCreateNumbers.east) edge (numbers.west)
+    ;
+
+\end{tikzpicture}
+
+## Cyclical references from exception handling
+
+\centering If you catch an exception, you get a cyclical reference!
+
+\tikzset{
+    square/.style={rectangle, draw=black, align=center, minimum width=5, thick},
+    value/.style={circle, draw=black, align=center, thick, minimum width=20},
+    point/.style={circle, fill=black, thin, minimum width=.05cm}
+}
+
+\centering
+\begin{tikzpicture}
+    \node[square,label={main frame}, xshift=-7cm, minimum width=80, minimum height=125] (frameMain) {};
+
+    \node[square, label={Locals}, yshift=1cm, xshift=-7cm] (localsMain) {\texttt{*exc}};
+
+    \node[square, below=.6cm of localsMain] (backMain) {f\_back};
+
+    \node[square, label={Code}, below=.6cm of backMain] (bytecodeMain) {
+        \tiny \texttt{def main():}\\  ...
+    };
+
+    \node[square, label={create\_numbers frame}, minimum width=80, minimum height=125] (frameCreateNumbers) {};
+
+    \node[square, label={Locals}, yshift=1cm] (localsCreateNumbers) {\texttt{*numbers}\\\texttt{*exc}};
+
+    \node[square, below=.4cm of localsCreateNumbers] (backCreateNumbers) {f\_back};
+
+    \node[square, label={Code}, below=.6cm of backCreateNumbers] (bytecodeCreateNumbers) {
+        \tiny \texttt{def create\_numbers():}\\  ...
+    };
+
+    \node[value, right=2cm of localsMain] (exception) {\texttt{exc}};
+    \node[value, right=1cm of localsCreateNumbers] (numbers) {\texttt{numbers}};
+
+    \path [thick, black, ->]
+    (localsMain.east) edge (exception.west)
+    (exception.east) edge (frameCreateNumbers.west)
+    (backCreateNumbers.west) edge (frameMain.east)
+    (localsCreateNumbers.east) edge (numbers.west)
+    (localsCreateNumbers.west) edge [bend right] (exception.north)
+    ;
+
+\end{tikzpicture}
 
 ## Garbage collection
 
